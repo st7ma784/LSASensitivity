@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 248 250 252; /* #f8fafc */
+  --foreground: 15 23 42; /* #0f172a */
+  --muted: 241 245 249; /* #f1f5f9 */
+  --muted-foreground: 100 116 139; /* #64748b */
+  --popover: 255 255 255; /* #ffffff */
+  --popover-foreground: 15 23 42; /* #0f172a */
+  --card: 255 255 255; /* #ffffff */
+  --card-foreground: 15 23 42; /* #0f172a */
+  --border: 226 232 240; /* #e2e8f0 */
+  --input: 226 232 240; /* #e2e8f0 */
+  --primary: 37 99 235; /* #2563eb */
+  --primary-foreground: 248 250 252; /* #f8fafc */
+  --secondary: 241 245 249; /* #f1f5f9 */
+  --secondary-foreground: 30 41 59; /* #1e293b */
+  --accent: 241 245 249; /* #f1f5f9 */
+  --accent-foreground: 30 41 59; /* #1e293b */
+  --destructive: 239 68 68; /* #ef4444 */
+  --destructive-foreground: 248 250 252; /* #f8fafc */
+  --ring: 37 99 235; /* #2563eb */
+  --radius: 0.5rem;
+  
+  /* Matrix-specific colors */
+  --matrix-bg: 248 250 252; /* #f8fafc */
+  --matrix-surface: 255 255 255; /* #ffffff */
+  --matrix-border: 226 232 240; /* #e2e8f0 */
+  --matrix-hover: 241 245 249; /* #f1f5f9 */
+}
+
+.dark {
+  --background: 15 23 42; /* #0f172a */
+  --foreground: 248 250 252; /* #f8fafc */
+  --muted: 30 41 59; /* #1e293b */
+  --muted-foreground: 148 163 184; /* #94a3b8 */
+  --popover: 15 23 42; /* #0f172a */
+  --popover-foreground: 248 250 252; /* #f8fafc */
+  --card: 15 23 42; /* #0f172a */
+  --card-foreground: 248 250 252; /* #f8fafc */
+  --border: 30 41 59; /* #1e293b */
+  --input: 30 41 59; /* #1e293b */
+  --primary: 37 99 235; /* #2563eb */
+  --primary-foreground: 248 250 252; /* #f8fafc */
+  --secondary: 30 41 59; /* #1e293b */
+  --secondary-foreground: 248 250 252; /* #f8fafc */
+  --accent: 30 41 59; /* #1e293b */
+  --accent-foreground: 248 250 252; /* #f8fafc */
+  --destructive: 239 68 68; /* #ef4444 */
+  --destructive-foreground: 248 250 252; /* #f8fafc */
+  --ring: 37 99 235; /* #2563eb */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .matrix-cell {
+    @apply transition-all duration-200 ease-in-out font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .matrix-cell:hover {
+    @apply transform scale-105 z-10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .matrix-grid {
+    @apply grid gap-0.5 p-4 bg-slate-100 rounded-lg;
+  }
+  
+  .calculation-indicator {
+    @apply animate-pulse;
+  }
+  
+  .tooltip {
+    @apply invisible opacity-0 transition-all duration-300 pointer-events-none;
+  }
+  
+  .tooltip.show {
+    @apply visible opacity-100;
+  }
+  
+  .slider-thumb {
+    @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+  }
+  
+  .slider-thumb::-webkit-slider-thumb {
+    @apply appearance-none w-5 h-5 rounded-full bg-blue-600 cursor-pointer border-2 border-white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slider-thumb::-moz-range-thumb {
+    @apply w-5 h-5 rounded-full bg-blue-600 cursor-pointer border-2 border-white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
