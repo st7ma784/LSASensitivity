@@ -4,7 +4,8 @@ import ControlPanel from "@/components/control-panel";
 import MatrixGrid from "@/components/matrix-grid";
 import SensitivityGrid from "@/components/sensitivity-grid";
 import CustomInputModal from "@/components/custom-input-modal";
-import { initializeMatrix, getCostMatrixColor, getSensitivityColor } from "@/lib/matrix-utils";
+import DistributionSelector from "@/components/distribution-selector";
+import { initializeMatrix, getCostMatrixColor, getSensitivityColor, DistributionType } from "@/lib/matrix-utils";
 import { hungarianAlgorithm } from "@/lib/hungarian-algorithm";
 import { calculateSensitivity } from "@/lib/sensitivity-analysis";
 
@@ -12,18 +13,32 @@ export default function MatrixAnalyzer() {
   const [rows, setRows] = useState(4);
   const [cols, setCols] = useState(4);
   const [optimizationMode, setOptimizationMode] = useState<'min' | 'max'>('min');
+  const [distribution, setDistribution] = useState<DistributionType>('uniform');
   const [costMatrix, setCostMatrix] = useState<number[][]>([]);
   const [sensitivityMatrix, setSensitivityMatrix] = useState<(number | null)[][]>([]);
   const [assignmentScore, setAssignmentScore] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number; value: number } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   // Initialize matrix when dimensions change
   useEffect(() => {
-    const newMatrix = initializeMatrix(rows, cols);
+    const newMatrix = initializeMatrix(rows, cols, distribution);
     setCostMatrix(newMatrix);
-  }, [rows, cols]);
+  }, [rows, cols, distribution]);
+
+  // Function to regenerate matrix with current distribution
+  const handleRegenerateMatrix = useCallback(() => {
+    setIsGenerating(true);
+    
+    // Small delay to show generation indicator
+    setTimeout(() => {
+      const newMatrix = initializeMatrix(rows, cols, distribution);
+      setCostMatrix(newMatrix);
+      setIsGenerating(false);
+    }, 300);
+  }, [rows, cols, distribution]);
 
   // Calculate assignment and sensitivity when matrix or mode changes
   useEffect(() => {
@@ -103,16 +118,28 @@ export default function MatrixAnalyzer() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Control Panel */}
-        <ControlPanel
-          rows={rows}
-          cols={cols}
-          optimizationMode={optimizationMode}
-          assignmentScore={assignmentScore}
-          isCalculating={isCalculating}
-          onRowsChange={setRows}
-          onColsChange={setCols}
-          onOptimizationModeChange={setOptimizationMode}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <ControlPanel
+              rows={rows}
+              cols={cols}
+              optimizationMode={optimizationMode}
+              assignmentScore={assignmentScore}
+              isCalculating={isCalculating}
+              onRowsChange={setRows}
+              onColsChange={setCols}
+              onOptimizationModeChange={setOptimizationMode}
+            />
+          </div>
+          <div>
+            <DistributionSelector
+              distribution={distribution}
+              onDistributionChange={setDistribution}
+              onRegenerateMatrix={handleRegenerateMatrix}
+              isGenerating={isGenerating}
+            />
+          </div>
+        </div>
 
         {/* Matrix Container */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -172,7 +199,7 @@ export default function MatrixAnalyzer() {
             <i className="fas fa-palette text-purple-600 mr-2"></i>
             Color Legend & Instructions
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <h4 className="font-medium text-gray-900 mb-3">Cost Matrix Colors</h4>
               <div className="space-y-2">
@@ -215,20 +242,47 @@ export default function MatrixAnalyzer() {
                 </div>
               </div>
             </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Distribution Types</h4>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 bg-purple-100 border border-purple-300 rounded"></div>
+                  <span className="text-sm text-gray-600">Current: {distribution.charAt(0).toUpperCase() + distribution.slice(1)}</span>
+                </div>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• <strong>Uniform</strong>: Equal probability</p>
+                  <p>• <strong>Gaussian</strong>: Bell curve distribution</p>
+                  <p>• <strong>Exponential</strong>: Skewed toward low values</p>
+                  <p>• <strong>Half-Normal</strong>: Positive values only</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-              <i className="fas fa-lightbulb mr-2"></i>
-              How to Use
-            </h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Adjust matrix size using the sliders above</li>
-              <li>• Left-click matrix cells to increase values (+1)</li>
-              <li>• Right-click matrix cells to decrease values (-1)</li>
-              <li>• Double-click cells for custom value input</li>
-              <li>• Switch between minimize/maximize optimization modes</li>
-              <li>• Hover over sensitivity cells for detailed tooltips</li>
-            </ul>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                <i className="fas fa-mouse-pointer mr-2"></i>
+                Matrix Interaction
+              </h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Left-click: Increase value (+1)</li>
+                <li>• Right-click: Decrease value (-1)</li>
+                <li>• Double-click: Custom input</li>
+                <li>• Hover: View cell position</li>
+              </ul>
+            </div>
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <h4 className="font-medium text-purple-900 mb-2 flex items-center">
+                <i className="fas fa-chart-bar mr-2"></i>
+                Distribution Controls
+              </h4>
+              <ul className="text-sm text-purple-800 space-y-1">
+                <li>• Select distribution type</li>
+                <li>• Use quick presets</li>
+                <li>• Regenerate with same distribution</li>
+                <li>• Adjust distribution parameters</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

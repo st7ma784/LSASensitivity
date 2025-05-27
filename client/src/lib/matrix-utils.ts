@@ -1,14 +1,179 @@
 /**
- * Initialize a matrix with random values
+ * Statistical distribution types for matrix initialization
  */
-export function initializeMatrix(rows: number, cols: number): number[][] {
+export type DistributionType = 
+  | 'uniform' 
+  | 'gaussian' 
+  | 'exponential' 
+  | 'halfNormal'
+  | 'weibull'
+  | 'gamma'
+  | 'discrete';
+
+/**
+ * Parameters for different distributions
+ */
+export interface DistributionParams {
+  uniform: { min: number; max: number };
+  gaussian: { mean: number; stdDev: number };
+  exponential: { lambda: number };
+  halfNormal: { sigma: number };
+  weibull: { shape: number; scale: number };
+  gamma: { shape: number; rate: number };
+  discrete: { values: number[] };
+}
+
+/**
+ * Generate random number from Box-Muller transformation (Gaussian)
+ */
+function generateGaussian(mean: number, stdDev: number): number {
+  let u = 0, v = 0;
+  while(u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+  while(v === 0) v = Math.random();
+  
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  return z * stdDev + mean;
+}
+
+/**
+ * Generate random number from exponential distribution
+ */
+function generateExponential(lambda: number): number {
+  return -Math.log(1 - Math.random()) / lambda;
+}
+
+/**
+ * Generate random number from half-normal distribution
+ */
+function generateHalfNormal(sigma: number): number {
+  const gaussian = generateGaussian(0, sigma);
+  return Math.abs(gaussian);
+}
+
+/**
+ * Generate random number from Weibull distribution
+ */
+function generateWeibull(shape: number, scale: number): number {
+  const u = Math.random();
+  return scale * Math.pow(-Math.log(1 - u), 1 / shape);
+}
+
+/**
+ * Generate random number from Gamma distribution (using Marsaglia and Tsang method)
+ */
+function generateGamma(shape: number, rate: number): number {
+  if (shape < 1) {
+    // Use rejection method for shape < 1
+    const u = Math.random();
+    return generateGamma(1 + shape, rate) * Math.pow(u, 1 / shape);
+  }
+  
+  const d = shape - 1/3;
+  const c = 1 / Math.sqrt(9 * d);
+  
+  while (true) {
+    let x, v;
+    do {
+      x = generateGaussian(0, 1);
+      v = 1 + c * x;
+    } while (v <= 0);
+    
+    v = v * v * v;
+    const u = Math.random();
+    
+    if (u < 1 - 0.0331 * x * x * x * x) {
+      return d * v / rate;
+    }
+    
+    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) {
+      return d * v / rate;
+    }
+  }
+}
+
+/**
+ * Generate random number from discrete distribution
+ */
+function generateDiscrete(values: number[]): number {
+  const index = Math.floor(Math.random() * values.length);
+  return values[index];
+}
+
+/**
+ * Generate a random value based on distribution type and parameters
+ */
+export function generateRandomValue(
+  distribution: DistributionType,
+  params: DistributionParams[DistributionType]
+): number {
+  switch (distribution) {
+    case 'uniform':
+      const uniformParams = params as DistributionParams['uniform'];
+      return Math.random() * (uniformParams.max - uniformParams.min) + uniformParams.min;
+      
+    case 'gaussian':
+      const gaussianParams = params as DistributionParams['gaussian'];
+      return generateGaussian(gaussianParams.mean, gaussianParams.stdDev);
+      
+    case 'exponential':
+      const expParams = params as DistributionParams['exponential'];
+      return generateExponential(expParams.lambda);
+      
+    case 'halfNormal':
+      const halfNormalParams = params as DistributionParams['halfNormal'];
+      return generateHalfNormal(halfNormalParams.sigma);
+      
+    case 'weibull':
+      const weibullParams = params as DistributionParams['weibull'];
+      return generateWeibull(weibullParams.shape, weibullParams.scale);
+      
+    case 'gamma':
+      const gammaParams = params as DistributionParams['gamma'];
+      return generateGamma(gammaParams.shape, gammaParams.rate);
+      
+    case 'discrete':
+      const discreteParams = params as DistributionParams['discrete'];
+      return generateDiscrete(discreteParams.values);
+      
+    default:
+      return Math.random() * 100 + 1; // Fallback to uniform [1, 101)
+  }
+}
+
+/**
+ * Initialize a matrix with values from a statistical distribution
+ */
+export function initializeMatrix(
+  rows: number, 
+  cols: number,
+  distribution: DistributionType = 'uniform',
+  params?: DistributionParams[DistributionType]
+): number[][] {
+  // Default parameters for each distribution
+  const defaultParams: DistributionParams = {
+    uniform: { min: 1, max: 100 },
+    gaussian: { mean: 50, stdDev: 20 },
+    exponential: { lambda: 0.1 },
+    halfNormal: { sigma: 30 },
+    weibull: { shape: 2, scale: 50 },
+    gamma: { shape: 2, rate: 0.05 },
+    discrete: { values: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] }
+  };
+
+  const actualParams = params || defaultParams[distribution];
   const matrix: number[][] = [];
+  
   for (let i = 0; i < rows; i++) {
     matrix[i] = [];
     for (let j = 0; j < cols; j++) {
-      matrix[i][j] = Math.floor(Math.random() * 100) + 1;
+      let value = generateRandomValue(distribution, actualParams);
+      
+      // Ensure positive values and round to reasonable precision
+      value = Math.max(0.1, Math.abs(value));
+      matrix[i][j] = Math.round(value * 10) / 10; // Round to 1 decimal place
     }
   }
+  
   return matrix;
 }
 
