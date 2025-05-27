@@ -77,12 +77,21 @@ function generateGamma(shape: number, rate: number): number {
   const d = shape - 1/3;
   const c = 1 / Math.sqrt(9 * d);
   
-  while (true) {
+  // Add maximum iteration limit to prevent infinite loops
+  let maxIterations = 1000;
+  while (maxIterations-- > 0) {
     let x, v;
+    let innerIterations = 100;
     do {
       x = generateGaussian(0, 1);
       v = 1 + c * x;
-    } while (v <= 0);
+      innerIterations--;
+    } while (v <= 0 && innerIterations > 0);
+    
+    if (innerIterations <= 0) {
+      // Fallback to simple exponential approximation
+      return generateExponential(rate) * shape;
+    }
     
     v = v * v * v;
     const u = Math.random();
@@ -95,6 +104,9 @@ function generateGamma(shape: number, rate: number): number {
       return d * v / rate;
     }
   }
+  
+  // Fallback if max iterations reached
+  return generateExponential(rate) * shape;
 }
 
 /**
@@ -103,15 +115,20 @@ function generateGamma(shape: number, rate: number): number {
 function generatePoisson(lambda: number): number {
   if (lambda <= 0) return 0;
   
-  // For small lambda, use Knuth's algorithm
+  // For small lambda, use Knuth's algorithm with safety limit
   if (lambda < 30) {
     const l = Math.exp(-lambda);
     let k = 0;
     let p = 1;
+    const maxIterations = 1000; // Prevent infinite loops
     
     do {
       k++;
       p *= Math.random();
+      if (k > maxIterations) {
+        // Fallback to normal approximation if too many iterations
+        return Math.max(0, Math.round(generateGaussian(lambda, Math.sqrt(lambda))));
+      }
     } while (p > l);
     
     return k - 1;

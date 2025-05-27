@@ -23,12 +23,12 @@ export default function MatrixAnalyzer() {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number; value: number } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [needsRecalculation, setNeedsRecalculation] = useState(false);
-  const [matrixUpdateTimeout, setMatrixUpdateTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Initialize matrix when dimensions change
   useEffect(() => {
     const newMatrix = initializeMatrix(rows, cols, distribution);
     setCostMatrix(newMatrix);
+    setNeedsRecalculation(true);
   }, [rows, cols, distribution]);
 
   // Function to regenerate matrix with current distribution
@@ -39,13 +39,14 @@ export default function MatrixAnalyzer() {
     setTimeout(() => {
       const newMatrix = initializeMatrix(rows, cols, distribution);
       setCostMatrix(newMatrix);
+      setNeedsRecalculation(true);
       setIsGenerating(false);
     }, 300);
   }, [rows, cols, distribution]);
 
-  // Calculate assignment and sensitivity when needed
+  // Separate effect for calculating sensitivity when needed
   useEffect(() => {
-    if (costMatrix.length === 0) return;
+    if (costMatrix.length === 0 || !needsRecalculation) return;
     
     setIsCalculating(true);
     
@@ -54,7 +55,7 @@ export default function MatrixAnalyzer() {
     const isLargeMatrix = matrixSize > 64; // 8x8 or larger
     
     // Use longer debounce for large matrices or complex methods
-    const debounceTime = isLargeMatrix || sensitivityMethod !== 'basic' ? 500 : 250;
+    const debounceTime = isLargeMatrix || sensitivityMethod !== 'basic' ? 500 : 200;
     
     // Debounce calculation to prevent excessive recalculations
     const timeoutId = setTimeout(() => {
@@ -65,7 +66,6 @@ export default function MatrixAnalyzer() {
         setAssignmentScore(cost);
         
         // For very large matrices, skip sensitivity calculation or use basic method only
-        const matrixSize = rows * cols;
         if (matrixSize > 100) {
           console.log('Matrix too large for sensitivity analysis');
           setSensitivityMatrix(costMatrix.map(row => row.map(() => null)));
@@ -83,48 +83,58 @@ export default function MatrixAnalyzer() {
       }
       
       setIsCalculating(false);
-    }, debounceTime); // Dynamic debounce time based on matrix size
+      setNeedsRecalculation(false);
+    }, debounceTime);
 
     // Cleanup timeout on component unmount or dependency change
     return () => clearTimeout(timeoutId);
-  }, [costMatrix, optimizationMode, sensitivityMethod, rows, cols]);
+  }, [needsRecalculation, optimizationMode, sensitivityMethod, costMatrix, rows, cols]);
 
-  const handleCellValueChange = useCallback((row: number, col: number, newValue: number) => {
+  // Optimized cell update function with debounced recalculation
+  const updateMatrixCell = useCallback((row: number, col: number, newValue: number) => {
     setCostMatrix(prev => {
       const newMatrix = [...prev];
       newMatrix[row] = [...newMatrix[row]];
       newMatrix[row][col] = Math.max(0, newValue);
       return newMatrix;
     });
+    
+    // Trigger recalculation after matrix update
+    setNeedsRecalculation(true);
   }, []);
+
+  const handleCellValueChange = useCallback((row: number, col: number, newValue: number) => {
+    updateMatrixCell(row, col, newValue);
+  }, [updateMatrixCell]);
 
   const handleCellClick = useCallback((row: number, col: number) => {
     setCostMatrix(prev => {
       const currentValue = prev[row][col];
+      const newValue = currentValue + 1;
       const newMatrix = [...prev];
       newMatrix[row] = [...newMatrix[row]];
-      newMatrix[row][col] = currentValue + 1;
+      newMatrix[row][col] = newValue;
       return newMatrix;
     });
+    setNeedsRecalculation(true);
   }, []);
 
   const handleCellRightClick = useCallback((row: number, col: number) => {
     setCostMatrix(prev => {
       const currentValue = prev[row][col];
+      const newValue = Math.max(0, currentValue - 1);
       const newMatrix = [...prev];
       newMatrix[row] = [...newMatrix[row]];
-      newMatrix[row][col] = Math.max(0, currentValue - 1);
+      newMatrix[row][col] = newValue;
       return newMatrix;
     });
+    setNeedsRecalculation(true);
   }, []);
 
   const handleCellDoubleClick = useCallback((row: number, col: number) => {
-    setCostMatrix(prev => {
-      setSelectedCell({ row, col, value: prev[row][col] });
-      setModalOpen(true);
-      return prev; // Don't update matrix, just open modal
-    });
-  }, []);
+    setSelectedCell({ row, col, value: costMatrix[row][col] });
+    setModalOpen(true);
+  }, [costMatrix]);
 
   const handleCustomValueSave = useCallback((value: number) => {
     if (selectedCell) {

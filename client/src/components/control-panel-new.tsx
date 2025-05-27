@@ -30,6 +30,8 @@ export default function ControlPanel({
   onOptimizationModeChange,
   onSensitivityMethodChange,
 }: ControlPanelProps) {
+  const selectedMethodInfo = SENSITIVITY_METHODS[sensitivityMethod];
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-matrix-border p-6 mb-6">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -95,6 +97,41 @@ export default function ControlPanel({
           </RadioGroup>
         </div>
 
+        {/* Sensitivity Method */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <Brain className="text-purple-600 mr-2" size={18} />
+            Sensitivity Method
+          </h3>
+          <div className="space-y-3">
+            <Select value={sensitivityMethod} onValueChange={onSensitivityMethodChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select method" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SENSITIVITY_METHODS).map(([key, method]) => (
+                  <SelectItem key={key} value={key}>
+                    {method.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Method Info */}
+            <div className="bg-gray-50 rounded-md p-3 text-xs">
+              <p className="text-gray-700 mb-1">
+                <strong>Description:</strong> {selectedMethodInfo.description}
+              </p>
+              <p className="text-green-700 mb-1">
+                <strong>Strengths:</strong> {selectedMethodInfo.strengths}
+              </p>
+              <p className="text-amber-700">
+                <strong>Limitations:</strong> {selectedMethodInfo.weaknesses}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Status Panel */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
@@ -123,33 +160,6 @@ export default function ControlPanel({
                   </>
                 )}
               </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Sensitivity Method Selection */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <Brain className="text-purple-600 mr-2" size={18} />
-            Sensitivity Method
-          </h3>
-          <div className="space-y-3">
-            <Select value={sensitivityMethod} onValueChange={onSensitivityMethodChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select method" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(SENSITIVITY_METHODS).map(([key, method]) => (
-                  <SelectItem key={key} value={key}>
-                    {method.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Method:</strong> {SENSITIVITY_METHODS[sensitivityMethod].name}</p>
-              <p><strong>Strengths:</strong> {SENSITIVITY_METHODS[sensitivityMethod].strengths}</p>
-              <p><strong>Limitations:</strong> {SENSITIVITY_METHODS[sensitivityMethod].weaknesses}</p>
             </div>
           </div>
         </div>
