@@ -28,6 +28,24 @@ const distributionInfo = {
     formula: "N(μ, σ²)",
     useCase: "Natural variations, measurement errors"
   },
+  normal: {
+    name: "Normal",
+    description: "Standard normal distribution",
+    formula: "N(μ, σ²)",
+    useCase: "Standard statistical modeling"
+  },
+  poisson: {
+    name: "Poisson",
+    description: "Discrete events in fixed intervals",
+    formula: "Pois(λ)",
+    useCase: "Count data, rare events"
+  },
+  bimodal: {
+    name: "Bimodal Normal",
+    description: "Sum of two normal distributions",
+    formula: "w×N(μ₁,σ₁²) + (1-w)×N(μ₂,σ₂²)",
+    useCase: "Mixed populations, dual scenarios"
+  },
   exponential: {
     name: "Exponential",
     description: "High probability for small values",
@@ -156,10 +174,26 @@ export default function DistributionSelector({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDistributionChange('gaussian')}
-              className={distribution === 'gaussian' ? 'bg-purple-100' : ''}
+              onClick={() => onDistributionChange('normal')}
+              className={distribution === 'normal' ? 'bg-purple-100' : ''}
             >
-              Natural
+              Normal
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDistributionChange('poisson')}
+              className={distribution === 'poisson' ? 'bg-purple-100' : ''}
+            >
+              Count Data
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDistributionChange('bimodal')}
+              className={distribution === 'bimodal' ? 'bg-purple-100' : ''}
+            >
+              Dual Peaks
             </Button>
             <Button
               variant="outline"
@@ -212,6 +246,57 @@ function DistributionParameters({ distribution }: { distribution: DistributionTy
           <div>
             <Label className="text-xs text-gray-600">Std Dev (σ)</Label>
             <Input type="number" defaultValue={20} className="h-8" />
+          </div>
+        </div>
+      )}
+
+      {distribution === 'normal' && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-gray-600">Mean (μ)</Label>
+            <Input type="number" defaultValue={50} className="h-8" />
+          </div>
+          <div>
+            <Label className="text-xs text-gray-600">Std Dev (σ)</Label>
+            <Input type="number" defaultValue={20} className="h-8" />
+          </div>
+        </div>
+      )}
+
+      {distribution === 'poisson' && (
+        <div>
+          <Label className="text-xs text-gray-600">Rate (λ)</Label>
+          <Input type="number" defaultValue={25} className="h-8" />
+          <p className="text-xs text-gray-500 mt-1">Average number of events</p>
+        </div>
+      )}
+
+      {distribution === 'bimodal' && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-gray-600">Mean 1 (μ₁)</Label>
+              <Input type="number" defaultValue={30} className="h-8" />
+            </div>
+            <div>
+              <Label className="text-xs text-gray-600">Std Dev 1 (σ₁)</Label>
+              <Input type="number" defaultValue={10} className="h-8" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-gray-600">Mean 2 (μ₂)</Label>
+              <Input type="number" defaultValue={70} className="h-8" />
+            </div>
+            <div>
+              <Label className="text-xs text-gray-600">Std Dev 2 (σ₂)</Label>
+              <Input type="number" defaultValue={10} className="h-8" />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs text-gray-600">Weight (w)</Label>
+            <Input type="number" defaultValue={0.5} step={0.1} min={0} max={1} className="h-8" />
+            <p className="text-xs text-gray-500 mt-1">Probability of first distribution (0-1)</p>
           </div>
         </div>
       )}

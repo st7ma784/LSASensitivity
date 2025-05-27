@@ -251,9 +251,9 @@ export default function MatrixAnalyzer() {
                 </div>
                 <div className="text-xs text-gray-500 space-y-1">
                   <p>• <strong>Uniform</strong>: Equal probability</p>
-                  <p>• <strong>Gaussian</strong>: Bell curve distribution</p>
-                  <p>• <strong>Exponential</strong>: Skewed toward low values</p>
-                  <p>• <strong>Half-Normal</strong>: Positive values only</p>
+                  <p>• <strong>Normal</strong>: Standard bell curve</p>
+                  <p>• <strong>Poisson</strong>: Count data, rare events</p>
+                  <p>• <strong>Bimodal</strong>: Two peaks (dual scenarios)</p>
                 </div>
               </div>
             </div>
