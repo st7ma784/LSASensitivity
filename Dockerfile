@@ -38,7 +38,8 @@ RUN npm ci
 COPY . .
 
 # Build application
-RUN npm run build:client
+RUN npm run build 
+#:client
 
 # Production stage
 FROM nginx:alpine AS production
