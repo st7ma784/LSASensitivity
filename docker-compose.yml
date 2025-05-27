@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Development service
+  app-dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+
+  # Production service  
+  app-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  # Documentation service
+  docs:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./docs:/app/docs
+      - /app/node_modules
+    command: npx vitepress dev docs --host 0.0.0.0 --port 3000
+
+  # Testing service
+  test:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npx vitest run
+    profiles:
+      - testing
